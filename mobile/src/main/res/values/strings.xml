@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Беспалево</string>
+    <string name="action_sync">Синхронизировать</string>
+</resources>
