@@ -1,6 +1,7 @@
 package ru.serega6531.bespalevo;
 
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -20,23 +21,20 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResolvingResultCallbacks;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.HashSet;
 
 public class PhoneActivity extends AppCompatActivity {
 
-    private ArrayList<String> listItems = new ArrayList<>();
+    private ArrayList<String> listItems;
     private ArrayAdapter<String> listAdapter;
     private GoogleApiClient conn;
-    private Random rand = new Random();
-    
+    private SharedPreferences pref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +43,9 @@ public class PhoneActivity extends AppCompatActivity {
         setContentView(R.layout.activity_phone);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        pref = getPreferences(MODE_PRIVATE);
+        listItems = new ArrayList<>(pref.getStringSet("latest", new HashSet<String>()));
 
         ListView list = (ListView) findViewById(R.id.listView);
         listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listItems);
@@ -69,11 +70,7 @@ public class PhoneActivity extends AppCompatActivity {
                         Log.d("Bespalevo", "onConnected: " + connectionHint);
 
                         PutDataMapRequest req = PutDataMapRequest.create("/text");
-                        ArrayList<String> put = new ArrayList<String>(listItems);
-
-                        int dummies = rand.nextInt(5);
-                        for(int i = 0; i < dummies; i++)
-                            put.add("dummy");       //KOSTILI!!!!
+                        ArrayList<String> put = new ArrayList<>(listItems);
 
                         req.getDataMap().putStringArrayList("list", put);
 
@@ -83,6 +80,7 @@ public class PhoneActivity extends AppCompatActivity {
                             public void onSuccess(DataApi.DataItemResult dataItemResult) {
                                 Log.d("Bespalevo", "Sync successful (" + dataItemResult.getDataItem().getData().length + " bytes)");
                                 Toast.makeText(activity, "Отправляется...", Toast.LENGTH_SHORT).show();
+                                Log.d("Bespalevo", "Desconnecting from GoogleApiClient");
                                 conn.disconnect();
                             }
 
@@ -103,7 +101,7 @@ public class PhoneActivity extends AppCompatActivity {
                     @Override
                     public void onConnectionFailed(ConnectionResult result) {
                         Log.d("Bespalevo", "onConnectionFailed: " + result);
-                        Toast.makeText(activity, "Ошибка: " + result.getErrorMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(activity, "Ошибка: " + result.getErrorCode() + ", " + result.getErrorMessage(), Toast.LENGTH_LONG).show();
                     }
                 }).addApi(Wearable.API)
                 .build();
@@ -113,7 +111,8 @@ public class PhoneActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 final EditText input = new EditText(activity);
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                input.setMaxLines(10);
+                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
                 new AlertDialog.Builder(activity)
                         .setTitle("Введите текст")
                         .setView(input)
@@ -133,6 +132,15 @@ public class PhoneActivity extends AppCompatActivity {
                         .create().show();
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        SharedPreferences.Editor editor = pref.edit();
+        Log.d("Bespalevo", "Saving latest list to config: " + listItems.toString());
+        editor.putStringSet("latest", new HashSet<>(listItems));
+        editor.commit();
     }
 
     @Override
@@ -160,6 +168,7 @@ public class PhoneActivity extends AppCompatActivity {
     }
 
     private void syncText(){
+        Log.d("Bespalevo", "Connecting to GoogleApiClient");
         conn.connect();
     }
 

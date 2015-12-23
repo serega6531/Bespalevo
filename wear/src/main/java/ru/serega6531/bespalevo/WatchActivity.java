@@ -10,8 +10,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -24,15 +22,10 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class WatchActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, DataApi.DataListener {
 
@@ -49,7 +42,6 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_watch);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        //setAmbientEnabled();
 
         mContainerView = (BoxInsetLayout) findViewById(R.id.container);
 
@@ -140,25 +132,6 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
         }
     }
 
-
-    /*@Override
-    public void onEnterAmbient(Bundle ambientDetails) {
-        super.onEnterAmbient(ambientDetails);
-        updateDisplay();
-    }
-
-    @Override
-    public void onUpdateAmbient() {
-        super.onUpdateAmbient();
-        updateDisplay();
-    }
-
-    @Override
-    public void onExitAmbient() {
-        updateDisplay();
-        super.onExitAmbient();
-    }*/
-
     private void updateDisplay(boolean hide) {
         if (hide) {
             //mContainerView.setBackgroundColor(getResources().getColor(android.R.color.black));
@@ -173,7 +146,7 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
         Log.d("Bespalevno", "Updating display: " + list.toString());
         listItems.clear();
 
-        list.removeAll(Arrays.asList("dummy"));
+        //list.removeAll(Arrays.asList("dummy"));
 
         listItems.addAll(list);
         listAdapter.notifyDataSetChanged();
