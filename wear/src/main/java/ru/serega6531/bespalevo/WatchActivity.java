@@ -1,15 +1,18 @@
 package ru.serega6531.bespalevo;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.wearable.activity.WearableActivity;
-import android.support.wearable.view.BoxInsetLayout;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -29,8 +32,8 @@ import java.util.Set;
 
 public class WatchActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, DataApi.DataListener {
 
-    private BoxInsetLayout mContainerView;
-    private ListView mListView;
+    private FrameLayout mContainerView;
+    private static ListView mListView;
 
     private GoogleApiClient conn;
     private ArrayAdapter<String> listAdapter;
@@ -43,17 +46,17 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
         setContentView(R.layout.activity_watch);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        mContainerView = (BoxInsetLayout) findViewById(R.id.container);
+        mContainerView = (FrameLayout) findViewById(R.id.container);
 
         mContainerView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_UP:
-                        updateDisplay(true);
+                        updateDisplay(mContainerView, true);
                         return true;
                     case MotionEvent.ACTION_DOWN:
-                        updateDisplay(false);
+                        updateDisplay(mContainerView, false);
                         return true;
                 }
 
@@ -76,7 +79,7 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
                 .addOnConnectionFailedListener(this)
                 .build();
 
-        updateDisplay(true);
+        updateDisplay(mContainerView, true);
     }
 
     @Override
@@ -96,8 +99,9 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
 
         SharedPreferences.Editor editor = pref.edit();
         Log.d("Bespalevo", "Saving latest list to config");
+        listItems.remove("Ничего нет :(");
         editor.putStringSet("latest", new HashSet<>(listItems));
-        editor.commit();
+        editor.apply();
     }
 
     @Override
@@ -112,7 +116,7 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d("Bespalevo", "Connection failed: " + connectionResult.getErrorMessage());
     }
 
@@ -132,13 +136,15 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
         }
     }
 
-    private void updateDisplay(boolean hide) {
+    private static void updateDisplay(FrameLayout mContainerView, boolean hide) {
         if (hide) {
-            //mContainerView.setBackgroundColor(getResources().getColor(android.R.color.black));
-            //mListView.setVisibility(View.GONE);
+            Log.d("Bespalevo", "Hiding text");
+            mContainerView.setBackgroundColor(Color.BLACK);
+            mListView.setVisibility(View.GONE);
         } else {
-            //mContainerView.setBackground(null);
-            //mListView.setVisibility(View.VISIBLE);
+            Log.d("Bespalevo", "Showing text");
+            mContainerView.setBackgroundColor(Color.WHITE);
+            mListView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -146,10 +152,13 @@ public class WatchActivity extends WearableActivity implements GoogleApiClient.C
         Log.d("Bespalevno", "Updating display: " + list.toString());
         listItems.clear();
 
-        //list.removeAll(Arrays.asList("dummy"));
+        if(list.size() > 0)
+            listItems.addAll(list);
+        else
+            listItems.add("Ничего нет :(");
 
-        listItems.addAll(list);
         listAdapter.notifyDataSetChanged();
+        Toast.makeText(this, "Обновлено", Toast.LENGTH_SHORT).show();
     }
 
 }

@@ -3,6 +3,7 @@ package ru.serega6531.bespalevo;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -77,15 +78,15 @@ public class PhoneActivity extends AppCompatActivity {
                         PendingResult<DataApi.DataItemResult> res = Wearable.DataApi.putDataItem(conn, req.asPutDataRequest());
                         res.setResultCallback(new ResolvingResultCallbacks<DataApi.DataItemResult>(activity, 0) {
                             @Override
-                            public void onSuccess(DataApi.DataItemResult dataItemResult) {
+                            public void onSuccess(@NonNull DataApi.DataItemResult dataItemResult) {
                                 Log.d("Bespalevo", "Sync successful (" + dataItemResult.getDataItem().getData().length + " bytes)");
                                 Toast.makeText(activity, "Отправляется...", Toast.LENGTH_SHORT).show();
-                                Log.d("Bespalevo", "Desconnecting from GoogleApiClient");
+                                Log.d("Bespalevo", "Disconnecting from GoogleApiClient");
                                 conn.disconnect();
                             }
 
                             @Override
-                            public void onUnresolvableFailure(Status status) {
+                            public void onUnresolvableFailure(@NonNull Status status) {
                                 Log.e("Bespalevo", "Sync error: " + status.getStatusMessage());
                                 Toast.makeText(activity, "Ошибка: " + status.getStatusMessage(), Toast.LENGTH_LONG).show();
                                 conn.disconnect();
@@ -99,7 +100,7 @@ public class PhoneActivity extends AppCompatActivity {
                     }
                 }).addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
-                    public void onConnectionFailed(ConnectionResult result) {
+                    public void onConnectionFailed(@NonNull ConnectionResult result) {
                         Log.d("Bespalevo", "onConnectionFailed: " + result);
                         Toast.makeText(activity, "Ошибка: " + result.getErrorCode() + ", " + result.getErrorMessage(), Toast.LENGTH_LONG).show();
                     }
@@ -140,7 +141,7 @@ public class PhoneActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = pref.edit();
         Log.d("Bespalevo", "Saving latest list to config: " + listItems.toString());
         editor.putStringSet("latest", new HashSet<>(listItems));
-        editor.commit();
+        editor.apply();
     }
 
     @Override
